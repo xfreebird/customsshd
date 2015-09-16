@@ -2,6 +2,7 @@
 # Disitrubted under the MIT license
 # Copyright (c) 2014 Nicolae Ghimbovschi
 
+VERSION=1.0.0
 ROOT_PATH=/usr/local/bin
 LAUNCHCTL_PATH="$HOME/Library/LaunchAgents/com.customsshd.plist"
 SCRIPT_PATH="$ROOT_PATH/customsshd"
@@ -114,9 +115,18 @@ fi
 
 }
 
+#show version
+if [ $# -eq 1 ]
+then
+     # copy the public key
+     echo "$VERSION"
+     exit 0
+fi
+
 #$1 - commnd, $2 public key, install the public key and service
 if [ $# -eq 2 ]
 then
+     # copy the public key
      cp -f "$2" "$SSHD_ACCESS_PUBKEY_PATH"
      installLaunchAgent
      exit 0

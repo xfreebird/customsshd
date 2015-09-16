@@ -50,6 +50,12 @@ The solution is to run those tests in user's UI session.
 
 # Usage
 
+* Get version:
+
+```shell
+customsshd -v
+```
+
 * Install/update the launchd service:
 
 ```shell
@@ -68,6 +74,10 @@ launchctl unload ~/Library/LaunchAgents/com.customsshd.plist
 launchctl load ~/Library/LaunchAgents/com.customsshd.plist
 ```
 
+# Logs
+
+All standard output is stored in ```/tmp/customsshd.log```.
+Error logs in ```/tmp/customsshd_err.log```.
 
 # License
 
