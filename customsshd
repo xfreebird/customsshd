@@ -1,0 +1,130 @@
+#!/bin/bash
+
+ROOT_PATH=/usr/local/bin
+LAUNCHCTL_PATH="$HOME/Library/LaunchAgents/com.customsshd.plist"
+SCRIPT_PATH="$ROOT_PATH/customsshd"
+CONFIG_PATH="$HOME/.customsshd"
+
+# SSH public key to be added to the authorized_keys for access
+SSHD_ACCESS_PUBKEY_PATH="$CONFIG_PATH/key.pub"
+SSHD_PORT=50111
+
+# SSH Daemon host keys
+SSH_HOST_KEY="$CONFIG_PATH/ssh_host_key"
+SSH_HOST_RSA_KEY="$CONFIG_PATH/ssh_host_rsa_key"
+SSH_HOST_DSA_KEY="$CONFIG_PATH/ssh_host_dsa_key"
+SSH_AUTHORIZED_KEYS_PATH="$HOME/.ssh/authorized_keys"
+
+# Create the customsshd home folder
+[ ! -f "$CONFIG_PATH" ] && mkdir -p "$CONFIG_PATH" < /dev/null > /dev/null 2> /dev/null
+
+# Generate SSH Daemon host keys if missing
+[ ! -f "$SSH_HOST_KEY" ]     && ssh-keygen -q -t rsa1 -f "$SSH_HOST_KEY"      -N "" -C "" < /dev/null > /dev/null 2> /dev/null
+[ ! -f "$SSH_HOST_RSA_KEY" ] && ssh-keygen -q -t rsa  -f "$SSH_HOST_RSA_KEY"  -N "" -C "" < /dev/null > /dev/null 2> /dev/null
+[ ! -f "$SSH_HOST_DSA_KEY" ] && ssh-keygen -q -t dsa  -f "$SSH_HOST_DSA_KEY"  -N "" -C "" < /dev/null > /dev/null 2> /dev/null
+
+# Get the content of the public key
+SSH_ACCESS_PUBKEY=$(cat "$SSHD_ACCESS_PUBKEY_PATH" | tr -d "\n")
+
+# Check if the public key is already in the authorized_keys file,
+# and inject it if not
+function verifyPubKey()
+{
+ createMissingDirs
+
+ if [ -f "$SSH_AUTHORIZED_KEYS_PATH" ];
+ then
+     PUBKEYEXISTS=`grep -q "$SSH_ACCESS_PUBKEY" "$SSH_AUTHORIZED_KEYS_PATH"`
+     if [[ $? -eq 1 ]]
+     then
+       injectPubKey
+     fi
+ else
+      injectPubKey
+     
+ fi
+}
+
+function injectPubKey()
+{
+  echo "$SSH_ACCESS_PUBKEY" >> "$SSH_AUTHORIZED_KEYS_PATH"
+  chmod 600 "$SSH_AUTHORIZED_KEYS_PATH"
+}
+
+function runSSHD() 
+{
+
+  /usr/sbin/sshd -D -p $SSHD_PORT -h "$SSH_HOST_KEY" -h "$SSH_HOST_RSA_KEY" -h "$SSH_HOST_DSA_KEY" -o UsePam=yes -o Protocol=1,2 -o PubkeyAuthentication=yes -o RSAAuthentication=yes
+ 
+}
+
+
+function installLaunchAgent()
+{
+
+createMissingDirs
+
+cat > "$LAUNCHCTL_PATH" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+   <key>Label</key>
+   <string>com.endava.customsshd</string>
+   <key>Program</key>
+   <string>$SCRIPT_PATH</string>
+   <key>RunAtLoad</key>
+   <true/>
+   <key>KeepAlive</key>
+   <true/>
+   <key>StandardOutPath</key>
+   <string>/tmp/customsshd.log</string>
+   <key>StandardErrorPath</key>
+   <string>/tmp/customsshd_err.log</string>
+</dict>
+</plist>
+EOF
+
+launchctl load -w "$LAUNCHCTL_PATH"
+
+echo "customsshd has been installed"
+
+}
+
+function createMissingDirs() 
+{
+
+LAUNCHAGENTS_DIR="$HOME/Library/LaunchAgents"
+
+if [ ! -d "$LAUNCHAGENTS_DIR" ]
+then
+    mkdir "$LAUNCHAGENTS_DIR"
+fi
+
+
+SSHLOCAL_DIR="$HOME/.ssh"
+
+if [ ! -d "$SSHLOCAL_DIR" ]
+then
+    mkdir "$SSHLOCAL_DIR"
+    chmod 700 "$SSHLOCAL_DIR"
+fi
+
+}
+
+#if anything passed as argument, just install the script
+if [ $# -eq 1 ]
+then
+     installLaunchAgent
+     exit 0
+fi
+
+verifyPubKey
+
+while :
+do
+
+   runSSHD
+
+done
+
