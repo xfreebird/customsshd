@@ -19,12 +19,6 @@ Now you should have two files:
 * Install ```customssd```
 
 ```shell
-brew install customsshd
-```
-
-or 
-
-```shell
 brew tap xfreebird/utils
 brew install customsshd
 ```
