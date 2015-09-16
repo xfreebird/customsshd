@@ -22,6 +22,13 @@ Now you should have two files:
 brew install customsshd
 ```
 
+or 
+
+```shell
+brew tap xfreebird/utils
+brew install customsshd
+```
+
 * Install the ```customsshd``` ```launchd``` service
 
 ```shell
