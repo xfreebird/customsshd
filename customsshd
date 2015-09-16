@@ -1,4 +1,6 @@
 #!/bin/bash
+# Disitrubted under the MIT license
+# Copyright (c) 2014 Nicolae Ghimbovschi
 
 ROOT_PATH=/usr/local/bin
 LAUNCHCTL_PATH="$HOME/Library/LaunchAgents/com.customsshd.plist"
@@ -23,13 +25,13 @@ SSH_AUTHORIZED_KEYS_PATH="$HOME/.ssh/authorized_keys"
 [ ! -f "$SSH_HOST_RSA_KEY" ] && ssh-keygen -q -t rsa  -f "$SSH_HOST_RSA_KEY"  -N "" -C "" < /dev/null > /dev/null 2> /dev/null
 [ ! -f "$SSH_HOST_DSA_KEY" ] && ssh-keygen -q -t dsa  -f "$SSH_HOST_DSA_KEY"  -N "" -C "" < /dev/null > /dev/null 2> /dev/null
 
-# Get the content of the public key
-SSH_ACCESS_PUBKEY=$(cat "$SSHD_ACCESS_PUBKEY_PATH" | tr -d "\n")
-
 # Check if the public key is already in the authorized_keys file,
 # and inject it if not
 function verifyPubKey()
 {
+ # Get the content of the public key
+ SSH_ACCESS_PUBKEY=$(cat "$SSHD_ACCESS_PUBKEY_PATH" | tr -d "\n")
+
  createMissingDirs
 
  if [ -f "$SSH_AUTHORIZED_KEYS_PATH" ];
@@ -112,9 +114,10 @@ fi
 
 }
 
-#if anything passed as argument, just install the script
-if [ $# -eq 1 ]
+#$1 - commnd, $2 public key, install the public key and service
+if [ $# -eq 2 ]
 then
+     cp -f "$2" "$SSHD_ACCESS_PUBKEY_PATH"
      installLaunchAgent
      exit 0
 fi
