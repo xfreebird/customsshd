@@ -4,6 +4,13 @@ Need to run commands through SSH in user's UI session ? Then this is for you.
 
 ## How to install ?
 
+* Install ```customssd```
+
+```shell
+brew tap xfreebird/utils
+brew install customsshd
+```
+
 * Generate SSH public/private key
 
 ```shell
@@ -16,12 +23,6 @@ Now you should have two files:
 
 ```sshd_rsa_key.pub``` - public SSH key that will be used by ```customsshd```
 
-* Install ```customssd```
-
-```shell
-brew tap xfreebird/utils
-brew install customsshd
-```
 
 * Install the ```customsshd``` ```launchd``` service
 
@@ -30,7 +31,7 @@ customsshd install sshd_rsa_key.pub
 ```
 
 * Configure OSX to autologing your user at startup, this will start the daemon too.
-* Configure Jenkins slave to connect to port **50111** with the generated private SSH certificate ```sshd_rsa_key```
+* Configure Jenkins Slave with SSH port **50111**, and the generated private SSH key ```sshd_rsa_key```
 
 
 ## Why ?
